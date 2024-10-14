@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FotoFilter</title>
+    <style>
+        body, html 
+        {
+            background: linear-gradient(to right, #DE5D83, #9ABFE6);
+            font-family: 'General Sans', sans-serif; /*custom*/
+            margin: 0;
+            padding: 0;
+            color: black;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding-top: 50px; 
+        }
+
+        /*large screens/desktop/projectors*/
+        @media (min-width: 1200px) 
+        {
+            #description 
+            {
+                font-size: 18px;
+                max-width: 60%; 
+                margin: 0 auto; 
+            }
+            #logo 
+            {
+                max-width: 30%; 
+            }
+            .button, .button2 
+            {
+                padding: 15px 30px; 
+                font-size: 18px; 
+            }
+            #button-container 
+            {
+                margin-top: 40px; 
+            }
+            .preview-image 
+            {
+                top: 150%;
+                width: 20%;
+            }
+
+            .loading-gif 
+            {
+                width: 100px; 
+                position: fixed;
+                bottom: 20px; 
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 9999; 
+            }
+        }
+
+        /*medium screens/tablets/ small laptops*/
+        @media (min-width: 768px) and (max-width: 1199px) 
+        {
+            #description 
+            {
+                font-size: 16px;
+                max-width: 80%; 
+            }
+            #logo 
+            {
+                max-width: 40%; 
+            }
+            .button, .button2 
+            {
+                padding: 12px 24px;
+                font-size: 16px;
+            }
+            #button-container 
+            {
+                margin-top: 30px; 
+            }
+            .preview-image 
+            {
+                top: 160%;
+                width: 15%;
+            }
+
+            .loading-gif 
+            {
+                width: 80px; 
+                position: fixed; 
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+
+        /*small screens/phones */
+        @media (max-width: 767px) 
+        {
+            #description 
+            {
+                font-size: 14px;
+                padding: 0 10px;
+                margin-left: 20px; 
+                margin-right: 20px;
+            }
+            #logo 
+            {
+                max-width: 50%;
+            }
+            .button, .button2 
+            {
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+            #button-container 
+            {
+                margin-top: 20px;
+            }
+            .preview-image 
+            {
+                top: 180%;
+                width: 50px; 
+            }
+
+            .loading-gif 
+            {
+                width: 60px; 
+                position: static;
+                margin-top: 20px; 
+                display: block;
+                margin-left: auto;
+                margin-right: auto; 
+            }
+
+            #results
+            {
+                margin-bottom: 20px; 
+            }
+        }
+
+        /*globals*/
+        #logo 
+        {
+            height: auto;
+            image-rendering: optimizeQuality;
+            animation: logoColorChange 3s ease-in-out;
+        }
+
+        @keyframes logoColorChange 
+        {
+            0%, 100% 
+            {
+                filter: none; /*black*/
+            }
+            50% 
+            {
+                filter: invert(100%) brightness(100%); /*white animation*/
+            }
+        }
+
+        #description 
+        {
+            font-size: 16px;
+            padding: 0 20px;
+            margin-bottom: 20px; 
+        }
+
+        #description:hover 
+        {
+        transform: scale(1.05); 
+        z-index: 10; 
+        }
+
+        #button-container 
+        {
+            margin-top: 20px;
+            position: relative;
+            height: auto;
+            transition: height 0.3s ease;
+        }
+
+        #button-container:hover 
+        {
+            height: 200px; 
+        }
+
+        .preview-image 
+        {
+            border: 0.5px solid #000000;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s ease, top 0.3s ease;
+            z-index: 1000;
+            background-color: red; /*temp bkg color*/
+        }
+
+        #results 
+        {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .flagged-image 
+        {
+            width: 120px;
+            height: auto;
+            margin: 5px;
+            border: 0.5px solid #000000;
+        }
+
+        .more-text 
+        {
+            color: white;
+            font-size: 20px;
+            margin-top: 10px;
+        }
+
+        .button 
+        {
+            font-family: 'General Sans', sans-serif;
+            background-color: #98c0eb;
+            color: rgb(0, 0, 0);
+            border-color: #000000;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 0 10px;
+            transform: translate(-8.25%, -30%);
+        }
+
+        .button2 
+        {
+            font-family: 'General Sans', sans-serif;
+            background-color: #98c0eb;
+            color: rgb(0, 0, 0);
+            padding: 10px 20px;
+            border-radius: 5px;
+            border-color: #000000;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin: 0 10px;
+        }
+
+        .button:hover 
+        {
+            background-color: #169848;
+            color: rgb(255, 255, 255);
+        }
+
+        .button2:hover 
+        {
+            background-color: #D2042D;
+            color: rgb(255, 255, 255);
+        }
+
+        #upload-btn 
+        {
+            position: relative;
+            overflow: hidden;
+            border: 2px solid black;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: none;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+            margin-bottom: 20px;
+        }
+
+        #upload-btn::before 
+        {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(to top, rgba(233, 30, 99, 0.7), rgba(103, 58, 183, 0.7));
+            border-radius: 50%;
+            transition: top 0.5s ease-in-out;
+        }
+
+        #upload-btn:hover::before 
+        {
+            top: 0%;
+        }
+
+        #upload-icon 
+        {
+            z-index: 10;
+            width: 50px;
+        }
+
+        .loading-gif 
+        {
+            width: 180px;
+            height: auto;
+            display: none;
+            transition: width 0.3s ease, transform 0.3s ease;
+        }
+
+        .upload-popup 
+        {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #A9A9A9;
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s, visibility 0s linear 0.5s;
+            z-index: 2000;
+        }
+
+        #downloadModal 
+        {
+            font-family: 'General Sans', sans-serif;
+            display: none;
+            background: #FFFFFF;
+            color: black;
+            padding: 20px;
+            border-radius: 5px;
+            position: fixed;
+            left: 50%;
+            top: 50%;
+            transform: translate(-52.5%, -50%);
+            z-index: 1000;
+            border: 1px solid #000000;
+            box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        #infoIcon 
+        {
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            transition: filter 0.3s;
+            filter: brightness(1);
+        }
+
+        #infoIcon:hover 
+        {
+            filter: brightness(1.5);
+        }
+
+        .modal 
+        {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content 
+        {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close 
+        {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus 
+        {
+            color: rgb(201, 13, 13);
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <img id="logo" src="/static/FotoFilterLogo.svg" alt="FotoFilter Logo">
+    <p id="description"><b>Use FotoFilter - An AI Photo Filtering Program to easily enhance your photos!</b>
+        <br>
+        Are you preparing for a particular occasion or just organizing your photo collection after going out? FotoFilter simplifies your digital life. Our simple tool allows you to quickly sift through your images based on particular criteria. Choose between three convenient options:
+        <br>
+        <br><u>Detect Faces:</u> Identify photographs with faces to ensure that no one is left out.
+        <br><u>Detect Blurriness:</u> Identify and sift through blurry photographs to keep just the sharpest images.
+        <br><u>Detect Duplicates:</u> Find and manage duplicate photographs to clear up space and organize your gallery.
+        <br>
+        <br>Start improving your photo library with FotoFilter today<code>&#8212;</code><code>&#8212;</code>perfection is just a click away!
+        </p>
+        <div id="upload-btn">
+            <img id="upload-icon" src="/static/upload.png" alt="Upload" onclick="document.getElementById('file-input').click();">
+            <input id="file-input" type="file" multiple style="display:none;" onchange="handleFileUpload()">
+        </div>
+        
+    <div id="button-container">
+        <button class="button" data-type="faces" onclick="detect('faces')">Detect Face(s) Photos</button>
+        <button class="button" data-type="blur" onclick="detect('blur')">Detect Blurry Photos</button>
+        <button class="button" data-type="duplicates" onclick="detect('duplicates')">Detect Replicates</button>
+    </div>
+    
+    <div id="results"></div>
+    <button id="filterBtn" class="button2" style="display:none;" onclick="offerDownloadOptions()">Download Filtered Images</button>
+    <img id="infoIcon" src="/static/info.png" alt="Info" onclick="showInfoPopup()" style="display: none;">
+    <div id="infoPopup" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p>TIP: If you are not receiving any results, first make sure that uploaded images are PNGs, JPGs, JPEGs, BMPs, or TIFFs.</p>
+            <p>If you have the right format but are still not receiving results, consider improving the clarity of your images. You can use online tools like <a href="https://letsenhance.io/" target="_blank">Image Enhancement Tool</a> to help make processing accurate.</p>
+        </div>
+    </div>
+    
+    <div id="downloadModal">
+        <p>Download as ZIP? Choosing "No" will download each file individually.</p>
+        <button class="button" onclick="processDownload(true)">Yes</button>
+        <button class="button" onclick="processDownload(false)">No</button>        
+    </div>
+    <img id="loading-gif" src="/static/loading.gif" class="loading-gif">
+    <div class="upload-popup" id="upload-popup">Files uploaded successfully!</div>
+    <div id="infoModal" class="modal">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <p>TIP: If you are not receiving any results, first make sure that uploaded images are PNGs, JPGs, JPEGs, etc.</p>
+          <p>If you have the right format, but are still not receiving results, consider improving the clarity of your images. You can use online tools like <a href="https://image.online-convert.com" target="_blank">Online Image Converter</a> to help make processing accurate.</p>
+        </div>
+      </div>      
+    <script>
+        let firstClick = true;
+        let canShowPreview = true;
+        let previewTimeouts = {}; //store timeouts
+
+        document.querySelectorAll('.button').forEach(button => 
+        {
+            button.addEventListener('mouseenter', function() 
+            {
+                const type = this.getAttribute('data-type');
+                if (firstClick && canShowPreview) {
+                    clearTimeout(previewTimeouts[type]);
+                    previewTimeouts[type] = setTimeout(() => 
+                    {
+                        showPreview(type);
+                    }, 100); //delay before preview (transition)
+                }
+            });
+
+            button.addEventListener('mouseleave', function() 
+            {
+                const type = this.getAttribute('data-type');
+                clearTimeout(previewTimeouts[type]);
+                hidePreview(type);
+            });
+
+            button.addEventListener('click', function() 
+            {
+                firstClick = false;
+                canShowPreview = false;
+                hideAllPreviews();
+            });
+        });
+
+        function showPreview(type) 
+        {
+            const imgSrc = `/static/preview-${type}.png`;
+            let previewImg = document.getElementById(`preview-${type}`);
+            if (!previewImg) 
+            {
+                previewImg = document.createElement('img');
+                previewImg.id = `preview-${type}`;
+                previewImg.className = 'preview-image';
+                previewImg.style.position = 'absolute';
+                previewImg.style.top = '72%';
+                previewImg.style.left = '50%';
+                previewImg.style.transform = 'translateX(-50%)';
+                previewImg.style.transition = 'opacity 0.125s ease-in-out';
+                previewImg.style.opacity = 0;
+                previewImg.style.width = '10%';
+                previewImg.style.display = 'block';
+                document.body.appendChild(previewImg);
+            }
+            previewImg.src = imgSrc;
+            setTimeout(() => 
+            {
+                if (canShowPreview) 
+                {  //change opacity if previews still enabled
+                    previewImg.style.opacity = 1;
+                }
+            }, 100);  //delay opacity change to ensure it doesn't trigger too quickly
+        }
+
+        function hidePreview(type) 
+        {
+            const previewImg = document.getElementById(`preview-${type}`);
+            if (previewImg) 
+            {
+                previewImg.style.opacity = 0;
+                setTimeout(() => previewImg.remove(), 300);
+            }
+        }
+
+        function hideAllPreviews() 
+        {
+            document.querySelectorAll('.preview-image').forEach(img => 
+            {
+                img.style.opacity = 0;
+                setTimeout(() => img.remove(), 300);
+            });
+            adjustButtonContainerHeight();
+        }
+
+        function adjustButtonContainerHeight() 
+        {
+            const container = document.getElementById('button-container');
+            if (container) 
+            {
+                container.style.height = '50px'; //reset to initial height
+            }
+        }
+
+    
+        function handleFileUpload()
+        {
+            const files = document.getElementById('file-input').files;
+            if (files.length > 0) 
+            {
+                showUploadSuccess();  //display the popup
+            }
+        }
+    
+        function detect(type) 
+        {
+            if (firstClick) 
+            {
+                firstClick = false; //ensure for prevent future previews
+                hideAllPreviews();
+            }
+            const formData = new FormData();
+            const files = document.getElementById('file-input').files;
+            Array.from(files).forEach(file => 
+            {
+                formData.append('files', file);
+            });
+            formData.append('action', type);
+            toggleLoading(true);
+            fetch('/analyze', 
+            {
+                method: 'POST',
+                body: formData
+            }).then(response => response.json())
+            .then(data => 
+            {
+                console.log(data); //check what server is returning
+                displayResults(data.results);
+                toggleLoading(false);
+            })
+            .catch(error => 
+            {
+                console.error('Error:', error);
+                toggleLoading(false);
+            });
+        }
+
+        function displayResults(results) 
+        {
+            const resultsDiv = document.getElementById('results');
+            const filterBtn = document.getElementById('filterBtn');
+            const infoIcon = document.getElementById('infoIcon');
+            resultsDiv.innerHTML = ''; //clear previous contents
+
+            if (results.length > 0) 
+            {
+                results.slice(0, 3).forEach(result => 
+                {
+                    const imgElement = document.createElement('img');
+                    imgElement.src = `/uploaded_images/${result.image}`;
+                    imgElement.alt = 'Flagged Image';
+                    imgElement.classList.add('flagged-image');
+                    resultsDiv.appendChild(imgElement);
+                });
+                if (results.length > 3) 
+                {
+                    const moreText = document.createElement('div');
+                    moreText.textContent = `+ ${results.length - 3} more`;
+                    moreText.classList.add('more-text');
+                    resultsDiv.appendChild(moreText);
+                }
+                filterBtn.style.display = 'block';
+                infoIcon.style.visibility = 'hidden';
+            } 
+            else 
+            {
+                resultsDiv.innerHTML = '<p>No results found.</p>';
+                filterBtn.style.display = 'none'; 
+                filterBtn.style.visibility = 'hidden'
+                infoIcon.style.visibility = 'visible';
+                infoIcon.style.display = 'block'; //shows only if no results
+            }
+            resultsDiv.style.display = 'block'; //for "no results found" text
+        }
+
+        function showInfoPopup() 
+        {
+            var modal = document.getElementById("infoPopup");
+            var span = document.getElementsByClassName("close")[0];
+
+            modal.style.display = "block"; //open modal
+
+            span.onclick = function() //close modal when clicking (X)
+            {
+                modal.style.display = "none";
+            }
+
+            // When the user clicks anywhere outside of the modal, close it
+            window.onclick = function(event) 
+            {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+        }
+    
+        function toggleLoading(show) 
+        {
+            const loadingGif = document.getElementById('loading-gif');
+            const filterBtn = document.getElementById('filterBtn');
+            if (show) 
+            {
+                loadingGif.style.display = 'block';
+                filterBtn.style.display = 'none';
+                document.getElementById('results').style.display = 'none';
+                infoIcon.style.visibility = 'hidden';
+            } 
+            else 
+            {
+                loadingGif.style.display = 'none';
+                //filterBtn.style.display = 'block';
+                filterBtn.style.visibility = 'visible'
+                document.getElementById('results').style.display = 'block';
+            }
+        }
+    
+        function showUploadSuccess() 
+        {
+            const uploadPopup = document.getElementById('upload-popup');
+            uploadPopup.style.visibility = 'visible'; // Make the popup visible
+            uploadPopup.style.opacity = '1'; // Fully opaque to make it visible
+
+            setTimeout(() => 
+            {
+                uploadPopup.style.opacity = '0'; // Begin to fade out after 3 seconds
+                setTimeout(() => 
+                {
+                    uploadPopup.style.visibility = 'hidden'; // Fully hide after transition
+                }, 500); // Delay for the opacity transition to finish
+            }, 3000); // Visible for 3 seconds
+        }
+    
+        function offerDownloadOptions() 
+        {
+            document.getElementById('downloadModal').style.display = 'block';
+        }
+    
+        function processDownload(downloadAsZip) 
+        {
+            document.getElementById('downloadModal').style.display = 'none';
+            fetch('/download', 
+            {
+                method: 'POST',
+                headers: 
+                {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({zip: downloadAsZip ? 'yes' : 'no'})
+            }).then(response => 
+            {
+                if (downloadAsZip) 
+                {
+                    return response.blob();
+                } 
+                else 
+                {
+                    return response.json();
+                }
+            })
+            .then(data => 
+            {
+                if (downloadAsZip) 
+                {
+                    const url = window.URL.createObjectURL(data);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = 'filtered_images.zip';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                } 
+                else 
+                {
+                    data.file_urls.forEach(url => 
+                    {
+                        const a = document.createElement('a');
+                        a.style.display = 'none';
+                        a.href = url;
+                        a.download = ''; // Filename will automatically be derived from the path
+                        document.body.appendChild(a);
+                        a.click();
+                        window.URL.revokeObjectURL(a.href);
+                        document.body.removeChild(a);
+                    });
+                }
+                console.log("Files downloaded.");
+            }).catch(error => 
+            {
+                console.error('Error downloading files:', error);
+            });
+        }
+        </script>
+    </body>
+</html>
